@@ -10,17 +10,23 @@ It reads data and raises THROW on failures. It does not modify data.
 All expected values describe INVENTED synthetic fixtures, not real COVID data.
 */
 IF DB_ID(N'CovidPortfolioDemo') IS NULL
-    THROW 52000, 'Create CovidPortfolioDemo with demo/00_create_synthetic_database.sql first.', 1;
+BEGIN
+    ;THROW 52000, 'Create CovidPortfolioDemo with demo/00_create_synthetic_database.sql first.', 1;
+END;
 GO
 USE CovidPortfolioDemo;
 GO
 
 IF OBJECT_ID(N'dbo.vw_covid_vaccination_reporting', N'V') IS NULL
-    THROW 52001, 'Reporting view not found; run covid_analytics_clean.sql first.', 1;
+BEGIN
+    ;THROW 52001, 'Reporting view not found; run covid_analytics_clean.sql first.', 1;
+END;
 
 -- Country-level case reports: 3 rows for each of 2 synthetic countries.
 IF (SELECT COUNT(*) FROM dbo.CovidDeaths WHERE continent IS NOT NULL) <> 6
-    THROW 52002, 'Unexpected number of country-level case reports.', 1;
+BEGIN
+    ;THROW 52002, 'Unexpected number of country-level case reports.', 1;
+END;
 
 -- Expected latest cases for Vietnam: 200 on day 3.
 IF (
@@ -41,7 +47,9 @@ IF (
 
 -- The view should retain all six country-level case dates.
 IF (SELECT COUNT(*) FROM dbo.vw_covid_vaccination_reporting) <> 6
-    THROW 52005, 'View row count mismatch. Check join-key uniqueness.', 1;
+BEGIN
+    ;THROW 52005, 'View row count mismatch. Check join-key uniqueness.', 1;
+END;
 
 -- Reported vaccination events: Vietnam = 10 + 20 + 30 = 60.
 IF (
