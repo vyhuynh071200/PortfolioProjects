@@ -1,41 +1,43 @@
-# COVID-19 Data Exploration with SQL
+# COVID-19 Data Exploration | SQL Server
 
-**Portfolio focus:** exploratory analysis and reporting queries using SQL Server.
+**Portfolio case study** · SQL · Joins · Aggregations · Window Functions · Reporting Views
 
-## Business / analytical questions
-1. How did reported cases and deaths evolve over time?
-2. What proportion of a location's population was reported as infected?
-3. How did reported case-fatality percentages compare across dates and locations?
-4. How can vaccination data be joined to case data to support time-series reporting?
+## Objective
+Explore reported COVID-19 cases, deaths, and vaccination events to demonstrate analytical SQL patterns and careful metric interpretation.
 
-## Skills demonstrated
-- `JOIN` on location and date
-- `GROUP BY` and aggregate functions (`SUM`, `MAX`)
-- `CAST` and `NULLIF` for numeric calculations
-- Window functions for rolling vaccination counts
-- Temporary tables and a SQL view for downstream visualization
+## Analytical questions
+1. How do reported cases and deaths change over time?
+2. What is the reported case-fatality percentage for a chosen location?
+3. How do cumulative reported cases compare with the population?
+4. Which locations have the largest reported cumulative case totals?
+5. How can case and vaccination records be combined into a reusable time-series reporting view?
 
-## Code
-**[Read the cleaned, documented SQL Server script](./covid_analytics_clean.sql)** (recommended)\n\n[Original exploratory SQL script](./Covid%20Project%20for%20Portfolio.sql) is preserved for reference.
+## Repository files
+- **[Clean analytical SQL script](./covid_analytics_clean.sql)** — the recommended, documented version, with consistent naming and a reporting view.
+- [Original exploratory SQL script](./Covid%20Project%20for%20Portfolio.sql) — preserved as an earlier working draft.
 
-This is **T-SQL / SQL Server** syntax. It references two tables named `PortfolioProject..CovidDeaths` and `PortfolioProject..CovidVaccination`. The underlying dataset and table-creation scripts are **not currently included** in this repository, so the script cannot be run on a new machine without preparing those input tables first.
+## Technical approach
+The cleaned script demonstrates `TRY_CONVERT`, `NULLIF`, `GROUP BY`, `SUM`, `MAX`, joins on `location` and `date`, and a window function with an explicit row frame. It builds `dbo.vw_covid_vaccination_reporting` for downstream queries.
 
-## Query workflow
-1. Inspect case and vaccination tables.
-2. Calculate case, death and population percentages.
-3. Aggregate totals by location, continent and date.
-4. Join deaths and vaccination tables on `location` and `date`.
-5. Calculate a rolling count of vaccinations with a window function.
-6. Prepare a SQL view (`dbo.PercentageVaccinated`) for visualization.
+### How to run
+1. Use **Microsoft SQL Server** (SQL Server Management Studio or Azure Data Studio).
+2. Prepare the tables `PortfolioProject.dbo.CovidDeaths` and `PortfolioProject.dbo.CovidVaccination`, with the expected fields.
+3. Review the source data for duplicate `(location, date)` records and missing numeric fields.
+4. Open and run [`covid_analytics_clean.sql`](./covid_analytics_clean.sql).
+5. Query `dbo.vw_covid_vaccination_reporting` in the active database.
 
-## Interpretation and limitations
-- `total_deaths / total_cases` is a **reported case-fatality percentage**, not the probability of death for a person who becomes infected.
-- Ratios depend on reporting quality, definitions, time coverage, and potentially zero or missing denominators.
-- The rolling sum is based on reported new vaccination counts; it should **not** automatically be interpreted as the number of distinct people vaccinated.
-- This repository demonstrates queries rather than a validated end-to-end dashboard or published findings. No output figures are claimed here without rerunning the code against documented data.
+> **Reproducibility status:** Source datasets, ingestion scripts, and actual result outputs are **not included** here. The SQL has been reviewed for structure but **not executed against the original SQL Server tables**. The view is created in your currently selected database (it references source data in `PortfolioProject`).
 
-## Suggested next improvement
-Include a data-source citation, reproducible import/cleaning script, expected output examples, and one dashboard or visual summary. Confirm each calculation against the actual source schema before publishing results.
+## Interpretation and data-quality cautions
+- `total_deaths / total_cases` estimates a **reported case-fatality percentage**, not a person's probability of dying after infection.
+- Cumulative reported cases can count repeat infections and are not necessarily the share of unique people ever infected.
+- A sum of reported vaccination events **does not measure distinct vaccinated individuals**.
+- Reported totals depend on source definitions, missing values, reporting adjustments, and data quality.
+- Aggregation excludes continent-level summary rows to reduce double counting; verify the dataset's location classifications.
+- The time-series join assumes a unique `(location, date)` key in both source tables. Duplicate keys can inflate joined totals.
+
+## Next steps
+Add an attributed, reproducible sample dataset and ingestion script, validated sample outputs, and a concise dashboard. Avoid claiming results that have not been independently reproduced.
 
 ---
-*Portfolio project by Vy Huynh.*
+**Portfolio project by Vy Huynh** — SQL-based exploratory analysis and reporting.
