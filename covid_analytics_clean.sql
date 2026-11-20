@@ -1,88 +1,135 @@
--- COVID-19 exploratory analysis (SQL Server / T-SQL)
--- Prerequisites:
---   PortfolioProject..CovidDeaths
---   PortfolioProject..CovidVaccination
--- Data files and import scripts are not yet included in this repository.
--- Exploratory queries: results depend on dataset snapshot and reporting quality.
+/*
+COVID-19 DATA EXPLORATION | T-SQL / Microsoft SQL Server
+Purpose : Explore reported cases, deaths, and vaccinations.
+Inputs  : PortfolioProject.dbo.CovidDeaths
+          PortfolioProject.dbo.CovidVaccination
+Scope   : Reporting and exploratory analysis, NOT causal inference.
 
--- 1. Reported cases, deaths and population by location/date
+Assumptions:
+- Both source tables use (location, date) as the intended reporting key.
+- Country-level records have a non-NULL continent.
+- Numeric fields may arrive as text, so TRY_CONVERT is used.
+- Data can include missing values and retrospective reporting revisions.
+- Source files and ingestion scripts are not included in this repository.
+
+Run in SQL Server Management Studio or Azure Data Studio.
+Each section can be executed independently after the prerequisites are met.
+*/
+SET NOCOUNT ON;
+
+DECLARE @focus_location NVARCHAR(100) = N'Vietnam';
+
+-- --------------------------------------------------------------------------
+-- 01 | Explore input quality for the focus country
+-- --------------------------------------------------------------------------
 SELECT
+    d.location,
+    COUNT(*) AS reporting_rows,
+    COUNT(DISTINCT d.[date]) AS distinct_reporting_dates,
+    SUM(CASE WHEN TRY_CONVERT(DECIMAL(20, 2), d.total_cases) IS NULL
+             THEN 1 ELSE 0 END) AS missing_or_invalid_total_cases,
+    SUM(CASE WHEN TRY_CONVERT(DECIMAL(20, 2), d.total_deaths) IS NULL
+             THEN 1 ELSE 0 END) AS missing_or_invalid_total_deaths
+FROM PortfolioProject.dbo.CovidDeaths AS d
+WHERE d.location = @focus_location
+GROUP BY d.location;
+
+-- --------------------------------------------------------------------------
+-- 02 | Reported cases and case-fatality percentage over time
+-- A case-fatality percentage is NOT the probability of death after infection.
+-- --------------------------------------------------------------------------
+SELECT
+    d.location,
+    d.[date] AS report_date,
+    TRY_CONVERT(DECIMAL(20, 2), d.total_cases) AS reported_total_cases,
+    TRY_CONVERT(DECIMAL(20, 2), d.total_deaths) AS reported_total_deaths,
+    100.0 * TRY_CONVERT(DECIMAL(20, 2), d.total_deaths)
+          / NULLIF(TRY_CONVERT(DECIMAL(20, 2), d.total_cases), 0)
+          AS reported_case_fatality_pct
+FROM PortfolioProject.dbo.CovidDeaths AS d
+WHERE d.location = @focus_location
+ORDER BY d.[date];
+
+-- --------------------------------------------------------------------------
+-- 03 | Reported cumulative cases as a share of population
+-- This is NOT unique infection prevalence when repeated cases are included.
+-- --------------------------------------------------------------------------
+SELECT
+    d.location,
+    d.[date] AS report_date,
+    100.0 * TRY_CONVERT(DECIMAL(20, 2), d.total_cases)
+          / NULLIF(TRY_CONVERT(DECIMAL(20, 2), d.population), 0)
+          AS cumulative_cases_per_100_people
+FROM PortfolioProject.dbo.CovidDeaths AS d
+WHERE d.location = @focus_location
+ORDER BY d.[date];
+
+-- --------------------------------------------------------------------------
+-- 04 | Highest reported cumulative cases by country
+-- Excludes regional/world aggregates to reduce double counting.
+-- --------------------------------------------------------------------------
+SELECT
+    d.location,
+    MAX(TRY_CONVERT(DECIMAL(20, 2), d.total_cases)) AS peak_reported_cumulative_cases,
+    MAX(TRY_CONVERT(DECIMAL(20, 2), d.population)) AS reported_population
+FROM PortfolioProject.dbo.CovidDeaths AS d
+WHERE d.continent IS NOT NULL
+GROUP BY d.location
+ORDER BY peak_reported_cumulative_cases DESC;
+
+-- --------------------------------------------------------------------------
+-- 05 | Daily reported cases and deaths across country-level records
+-- Reporting adjustments may create negative daily values.
+-- --------------------------------------------------------------------------
+SELECT
+    d.[date] AS report_date,
+    SUM(TRY_CONVERT(DECIMAL(20, 2), d.new_cases)) AS reported_new_cases,
+    SUM(TRY_CONVERT(DECIMAL(20, 2), d.new_deaths)) AS reported_new_deaths
+FROM PortfolioProject.dbo.CovidDeaths AS d
+WHERE d.continent IS NOT NULL
+GROUP BY d.[date]
+ORDER BY d.[date];
+
+-- --------------------------------------------------------------------------
+-- 06 | Create a reusable reporting view
+-- Joining assumes a unique row per (location, date) in each source.
+-- Validate join-key uniqueness before relying on rolled-up results.
+-- Cumulative vaccination events are NOT unique vaccinated individuals.
+-- A CREATE VIEW statement must start its own SQL Server batch.
+-- --------------------------------------------------------------------------
+GO
+
+CREATE OR ALTER VIEW dbo.vw_covid_vaccination_reporting
+AS
+SELECT
+    d.continent,
+    d.location,
+    d.[date] AS report_date,
+    TRY_CONVERT(DECIMAL(20, 2), d.population) AS population,
+    TRY_CONVERT(DECIMAL(20, 2), v.new_vaccinations) AS reported_new_vaccinations,
+    SUM(COALESCE(TRY_CONVERT(DECIMAL(20, 2), v.new_vaccinations), 0))
+        OVER (
+            PARTITION BY d.location
+            ORDER BY d.[date]
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS rolling_reported_vaccination_events
+FROM PortfolioProject.dbo.CovidDeaths AS d
+INNER JOIN PortfolioProject.dbo.CovidVaccination AS v
+    ON d.location = v.location
+   AND d.[date] = v.[date]
+WHERE d.continent IS NOT NULL;
+GO
+
+-- --------------------------------------------------------------------------
+-- 07 | Inspect output of the reporting view
+-- --------------------------------------------------------------------------
+SELECT TOP (100)
     location,
-    [date],
-    TRY_CAST(total_cases AS float) AS total_cases,
-    TRY_CAST(total_deaths AS float) AS total_deaths,
-    TRY_CAST(population AS float) AS population
-FROM PortfolioProject..CovidDeaths
-WHERE continent IS NOT NULL
-ORDER BY location, [date];
-
--- 2. Reported case-fatality percentage (not an individual fatality risk)
-SELECT
-    location,
-    [date],
-    100.0 * TRY_CAST(total_deaths AS float)
-        / NULLIF(TRY_CAST(total_cases AS float), 0) AS reported_case_fatality_pct
-FROM PortfolioProject..CovidDeaths
-WHERE location = 'Vietnam'
-ORDER BY [date];
-
--- 3. Reported cases relative to population
-SELECT
-    location,
-    [date],
-    100.0 * TRY_CAST(total_cases AS float)
-        / NULLIF(TRY_CAST(population AS float), 0) AS reported_cases_per_100_population
-FROM PortfolioProject..CovidDeaths
-WHERE location = 'Vietnam'
-ORDER BY [date];
-
--- 4. Largest reported cumulative case total per location
-SELECT
-    location,
-    MAX(TRY_CAST(population AS float)) AS population,
-    MAX(TRY_CAST(total_cases AS float)) AS max_reported_cases
-FROM PortfolioProject..CovidDeaths
-WHERE continent IS NOT NULL
-GROUP BY location
-ORDER BY max_reported_cases DESC;
-
--- 5. Daily global totals (country-level rows only; avoid regional double-counting)
-SELECT
-    [date],
-    SUM(TRY_CAST(new_cases AS float)) AS reported_new_cases,
-    SUM(TRY_CAST(new_deaths AS float)) AS reported_new_deaths,
-    100.0 * SUM(TRY_CAST(new_deaths AS float))
-        / NULLIF(SUM(TRY_CAST(new_cases AS float)), 0) AS daily_deaths_to_cases_pct
-FROM PortfolioProject..CovidDeaths
-WHERE continent IS NOT NULL
-GROUP BY [date]
-ORDER BY [date];
-
--- 6. Vaccination reporting joined by location and date
--- Running totals are cumulative reported vaccination events, not unique people.
-WITH DailyVaccination AS (
-    SELECT
-        d.continent,
-        d.location,
-        d.[date],
-        TRY_CAST(d.population AS float) AS population,
-        TRY_CAST(v.new_vaccinations AS float) AS new_vaccinations
-    FROM PortfolioProject..CovidDeaths AS d
-    INNER JOIN PortfolioProject..CovidVaccination AS v
-      ON d.location = v.location
-     AND d.[date] = v.[date]
-    WHERE d.continent IS NOT NULL
-)
-SELECT
-    continent,
-    location,
-    [date],
+    report_date,
     population,
-    new_vaccinations,
-    SUM(COALESCE(new_vaccinations, 0.0))
-      OVER (PARTITION BY location ORDER BY [date] ROWS UNBOUNDED PRECEDING)
-      AS rolling_reported_vaccination_events
-FROM DailyVaccination
-ORDER BY location, [date];
+    reported_new_vaccinations,
+    rolling_reported_vaccination_events
+FROM dbo.vw_covid_vaccination_reporting
+ORDER BY location, report_date;
 
--- Note: Inspect missingness, revisions and dataset versions before using this for decisions.
+-- End of exploratory workflow.
