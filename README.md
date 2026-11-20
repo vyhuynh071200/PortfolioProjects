@@ -16,7 +16,7 @@
 - Temporary tables and a SQL view for downstream visualization
 
 ## Code
-**[Read the SQL script](./Covid%20Project%20for%20Portfolio.sql)**
+**[Read the cleaned, documented SQL Server script](./covid_analytics_clean.sql)** (recommended)\n\n[Original exploratory SQL script](./Covid%20Project%20for%20Portfolio.sql) is preserved for reference.
 
 This is **T-SQL / SQL Server** syntax. It references two tables named `PortfolioProject..CovidDeaths` and `PortfolioProject..CovidVaccination`. The underlying dataset and table-creation scripts are **not currently included** in this repository, so the script cannot be run on a new machine without preparing those input tables first.
 
