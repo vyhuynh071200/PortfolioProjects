@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="320" viewBox="0 0 940 320" role="img" aria-labelledby="title description">
+<title id="title">COVID-19 SQL portfolio workflow</title>
+<desc id="description">Flow from source tables for cases and vaccinations to data quality checks, analytical SQL queries using CTEs and window functions, and a reusable reporting view. Separate SQL tests validate an isolated synthetic demo.</desc>
+<style>.title{font:700 25px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#183450}.subtitle{font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#576F84}.step{font:700 17px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#183450}.sub{font:13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#5A7083}.foot{font:13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:#5C7287}</style>
+<rect width="940" height="320" rx="18" fill="#FFFFFF"/>
+<rect x="17" y="18" width="906" height="285" rx="14" fill="#F7FAFD" stroke="#DEE7EF"/>
+<text x="36" y="61" class="title">From raw records to reliable reporting</text>
+<text x="36" y="88" class="subtitle">Exploratory T-SQL workflow · validation before interpretation</text>
+<path d="M236 183h22" stroke="#4A7696" stroke-width="2.5" stroke-linecap="round"/><path d="M251 177l8 6-8 6" fill="none" stroke="#4A7696" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M462 183h22" stroke="#4A7696" stroke-width="2.5" stroke-linecap="round"/><path d="M477 177l8 6-8 6" fill="none" stroke="#4A7696" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M688 183h22" stroke="#4A7696" stroke-width="2.5" stroke-linecap="round"/><path d="M703 177l8 6-8 6" fill="none" stroke="#4A7696" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<g>
+  <rect x="34" y="135" width="200" height="96" rx="13" fill="#FFFFFF" stroke="#CAD8E7" stroke-width="1.5"/>
+  <text x="134" y="169" class="step" text-anchor="middle">Source tables</text>
+  <text x="134" y="194" class="sub" text-anchor="middle">Cases · Deaths · Vaccinations</text>
+</g>
+
+<g>
+  <rect x="260" y="135" width="200" height="96" rx="13" fill="#FFFFFF" stroke="#CAD8E7" stroke-width="1.5"/>
+  <text x="360" y="169" class="step" text-anchor="middle">Data quality</text>
+  <text x="360" y="194" class="sub" text-anchor="middle">NULLs · Keys · Join coverage</text>
+</g>
+
+<g>
+  <rect x="486" y="135" width="200" height="96" rx="13" fill="#FFFFFF" stroke="#CAD8E7" stroke-width="1.5"/>
+  <text x="586" y="169" class="step" text-anchor="middle">Analysis</text>
+  <text x="586" y="194" class="sub" text-anchor="middle">CTEs · Window functions</text>
+</g>
+
+<g>
+  <rect x="712" y="135" width="200" height="96" rx="13" fill="#E0F4F0" stroke="#3C9387" stroke-width="1.5"/>
+  <text x="812" y="169" class="step" text-anchor="middle">Reporting</text>
+  <text x="812" y="194" class="sub" text-anchor="middle">Reusable SQL view</text>
+</g>
+
+<line x1="36" y1="263" x2="908" y2="263" stroke="#D5E0EA"/>
+<text x="37" y="286" class="foot">Separate synthetic demo and assertions are provided; historical source data are not bundled.</text>
+</svg>
