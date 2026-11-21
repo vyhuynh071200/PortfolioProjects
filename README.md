@@ -6,6 +6,10 @@
 
 This project explores how to turn case, death, population, and vaccination tables into **reliable reporting queries**. It started as an exploratory SQL exercise and has been reorganized to make the analytical logic easier to review and test.
 
+![SQL reporting workflow](./assets/sql_reporting_workflow.svg)
+
+*Workflow overview. The included test database contains invented values; historical records and validated real-world results are not packaged.*
+
 **Questions addressed**
 1. How do reported cases and deaths change over time?
 2. How do reported case-fatality percentages and cumulative cases per 100 inhabitants differ?
